@@ -11,7 +11,7 @@ const PageWrapper = Comp =>
   class extends React.Component {
     static async getInitialProps(args) {
       const [headerMenu, childProps] = await Promise.all([
-        wp.menus().id('header-menu'),
+        wp.menus().id('footer'),
         Comp.getInitialProps ? Comp.getInitialProps(args) : {},
       ]);
 
