@@ -9,6 +9,7 @@ import Config from '../config';
 import Logo from '../static/images/starter-kit-logo.svg';
 
 const wp = new WPAPI({ endpoint: Config.apiUrl });
+wp.menus = wp.registerRoute('menus/v1', '/menus/(?P<id>[a-zA-Z(-]+)');
 
 const headerImageStyle = {
   marginTop: 50,
@@ -28,29 +29,7 @@ class Index extends Component {
     id: '',
   };
 
-  static async getInitialProps() {
-    try {
-      const [page, posts, pages] = await Promise.all([
-        wp
-          .pages()
-          .slug('welcome')
-          .embed()
-          .then(data => {
-            return data[0];
-          }),
-        wp.posts().embed(),
-        wp.pages().embed(),
-      ]);
 
-      return { page, posts, pages };
-    } catch (err) {
-      if (err.data.status === 403) {
-        tokenExpired();
-      }
-    }
-
-    return null;
-  }
 
   componentDidMount() {
     const token = localStorage.getItem(Config.AUTH_TOKEN);
@@ -73,7 +52,7 @@ class Index extends Component {
   render() {
     const { id } = this.state;
     const { posts, pages, headerMenu, page } = this.props;
-    const fposts = posts.map(post => {
+    const fposts = posts?.map(post => {
       return (
         <ul key={post.slug}>
           <li>
@@ -87,7 +66,7 @@ class Index extends Component {
         </ul>
       );
     });
-    const fpages = pages.map(ipage => {
+    const fpages = pages?.map(ipage => {
       if (ipage.slug !== 'welcome') {
         return (
           <ul key={ipage.slug}>
@@ -146,4 +125,34 @@ class Index extends Component {
   }
 }
 
-export default PageWrapper(Index);
+
+
+export const getStaticProps  = async () => {
+
+  try {
+    const [page, posts, pages, headerMenu] = await Promise.all([
+      wp
+        .pages()
+        .slug('welcome')
+        .embed()
+        .then(data => {
+          return data[0];
+        }),
+      wp.posts().embed(),
+      wp.pages().embed(),
+			wp.menus().id('footer')
+		]);
+
+  return { props: {
+    headerMenu, page, posts, pages
+    }
+  };
+  } catch (err) {
+    if (err.data.status === 403) {
+      tokenExpired();
+    }
+  }
+
+}
+
+export default Index;
